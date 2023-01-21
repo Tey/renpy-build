@@ -11,6 +11,12 @@ def unpack(c: Context):
     c.var("version", version)
     c.run("tar xzf {{source}}/SDL2_image-{{version}}.tar.gz")
 
+@task(platforms="web")
+def patch_sdl2_image(c: Context):
+    c.var("version", version)
+    c.chdir("SDL2_image-{{version}}")
+    c.patch("sdl2_image/canvas_format.diff")
+    c.run("cp {{patches}}/sdl2_image/IMG_canvas.c ./")
 
 @task(platforms="all")
 def build(c: Context):
