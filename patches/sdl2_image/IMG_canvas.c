@@ -42,7 +42,6 @@ SDL_Surface *IMG_LoadCANVAS_RW(SDL_RWops *src)
     Uint16 width;
     Uint16 height;
 
-    void *pixels = NULL;
     SDL_Surface *img = NULL;
 
     // Canvas pixel are stored as RGBA, 8-bit for each component (32-bit big endian)
@@ -72,18 +71,7 @@ SDL_Surface *IMG_LoadCANVAS_RW(SDL_RWops *src)
       SDL_RWseek(src, hdr_len - sizeof(hdr), RW_SEEK_CUR);
     }
 
-    pixels = SDL_malloc(width * height * 4);
-    if (!pixels) {
-        error = "Out of memory";
-        goto error;
-    }
-
-    if (!SDL_RWread(src, pixels, width * height * 4, 1)) {
-        error = "Error reading CANVAS data";
-        goto error;
-    }
-
-    img = SDL_CreateRGBSurfaceFrom(pixels, width, height, 32, width * 4,
+    img = SDL_CreateRGBSurface(0, width, height, 32,
 #if SDL_BYTEORDER == SDL_BIG_ENDIAN
             0xFF000000, 0x00FF0000, 0x0000FF00, 0x000000FF);
 #else
@@ -93,15 +81,16 @@ SDL_Surface *IMG_LoadCANVAS_RW(SDL_RWops *src)
         error = "Out of memory";
         goto error;
     }
-    pixels = NULL;
+
+    if (!SDL_RWread(src, img->pixels, width * height * 4, 1)) {
+        error = "Error reading CANVAS data";
+        goto error;
+    }
 
     return img;
 
 error:
     SDL_RWseek(src, start, RW_SEEK_SET);
-    if ( pixels ) {
-      SDL_free(pixels);
-    }
     if ( img ) {
         SDL_FreeSurface(img);
     }
